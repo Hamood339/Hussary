@@ -162,6 +162,11 @@ class AudioEngine {
     });
   }
 
+  clearMediaMetadata() {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = null;
+  }
+
   updatePositionState() {
     if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
     const duration = this.audio.duration;

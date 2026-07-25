@@ -3,6 +3,7 @@ import type { RepeatMode, SleepTimerMode, Surah } from '@/types';
 import { SURAHS } from '@/data/surahs';
 import { audioEngine } from '@/services/audioEngine';
 import { dbApi } from '@/lib/db';
+import { useSettingsStore } from '@/store/settingsStore';
 
 interface PlayerState {
   currentSurah: Surah | null;
@@ -12,7 +13,6 @@ interface PlayerState {
   duration: number;
   playbackRate: number;
   repeatMode: RepeatMode;
-  autoNext: boolean;
   isExpanded: boolean;
   sleepTimerMode: SleepTimerMode;
   sleepTimerEndsAt: number | null;
@@ -26,11 +26,11 @@ interface PlayerState {
   seekBy: (delta: number) => void;
   setPlaybackRate: (rate: number) => void;
   cycleRepeatMode: () => void;
-  toggleAutoNext: () => void;
   setExpanded: (expanded: boolean) => void;
   setSleepTimer: (mode: SleepTimerMode) => void;
   clearSleepTimer: () => void;
   tickSleepTimer: () => void;
+  refreshMediaMetadata: () => void;
 }
 
 let sleepInterval: ReturnType<typeof setInterval> | null = null;
@@ -59,7 +59,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   duration: 0,
   playbackRate: 1,
   repeatMode: 'off',
-  autoNext: true,
   isExpanded: false,
   sleepTimerMode: null,
   sleepTimerEndsAt: null,
@@ -69,12 +68,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { playbackRate } = get();
     audioEngine.load(surah.audioSrc, true, startAt);
     audioEngine.setPlaybackRate(playbackRate);
-    audioEngine.updateMediaMetadata({
-      title: `${surah.number}. ${surah.frenchName}`,
-      artist: 'Cheikh Mahmoud Khalil Al-Hussary',
-      album: 'Hussary Quran',
-    });
     set({ currentSurah: surah, currentTime: startAt });
+    get().refreshMediaMetadata();
     void dbApi.recordHistory(surah.number, startAt);
   },
 
@@ -120,8 +115,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ repeatMode: next });
   },
 
-  toggleAutoNext: () => set((s) => ({ autoNext: !s.autoNext })),
-
   setExpanded: (expanded) => set({ isExpanded: expanded }),
 
   setSleepTimer: (mode) => {
@@ -154,6 +147,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (remaining <= 0) {
       audioEngine.pause();
       get().clearSleepTimer();
+    }
+  },
+
+  refreshMediaMetadata: () => {
+    const { currentSurah } = get();
+    if (!currentSurah) return;
+    if (useSettingsStore.getState().notificationsEnabled) {
+      audioEngine.updateMediaMetadata({
+        title: `${currentSurah.number}. ${currentSurah.frenchName}`,
+        artist: 'Cheikh Mahmoud Khalil Al-Hussary',
+        album: 'Hussary Quran',
+      });
+    } else {
+      audioEngine.clearMediaMetadata();
     }
   },
 }));
@@ -195,7 +202,7 @@ export function initPlayerEngineSync() {
   }, 4000);
 
   const unsubscribeEnded = audioEngine.onEnded(() => {
-    const { repeatMode, sleepTimerMode, autoNext, currentSurah } = usePlayerStore.getState();
+    const { repeatMode, sleepTimerMode, currentSurah } = usePlayerStore.getState();
     if (currentSurah) void dbApi.markCompleted(currentSurah.number);
 
     if (sleepTimerMode === 'end-of-surah') {
@@ -207,7 +214,7 @@ export function initPlayerEngineSync() {
       void audioEngine.play();
       return;
     }
-    if (repeatMode === 'all' || autoNext) {
+    if (repeatMode === 'all' || useSettingsStore.getState().autoplay) {
       usePlayerStore.getState().playNext();
       return;
     }

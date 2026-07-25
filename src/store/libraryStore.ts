@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { BookmarkRecord, ContinueListeningRecord, HistoryRecord } from '@/types';
 import { dbApi } from '@/lib/db';
-import { generateId } from '@/lib/utils';
+import { generateId, localDateKey } from '@/lib/utils';
 
 interface LibraryState {
   favorites: Set<number>;
@@ -25,10 +25,16 @@ interface LibraryState {
 function computeStreak(dates: string[]): number {
   if (dates.length === 0) return 0;
   const set = new Set(dates);
-  let streak = 0;
   const cursor = new Date();
+  // If nothing has been listened to yet today, start counting from
+  // yesterday so the streak doesn't drop to 0 before the day is over.
+  if (!set.has(localDateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!set.has(localDateKey(cursor))) return 0;
+  }
+  let streak = 0;
   for (;;) {
-    const key = cursor.toISOString().slice(0, 10);
+    const key = localDateKey(cursor);
     if (set.has(key)) {
       streak += 1;
       cursor.setDate(cursor.getDate() - 1);

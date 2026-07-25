@@ -7,6 +7,7 @@ import type {
   FavoriteRecord,
   HistoryRecord,
 } from '@/types';
+import { localDateKey } from '@/lib/utils';
 
 const DB_NAME = 'hussary-quran-db';
 const DB_VERSION = 1;
@@ -156,7 +157,7 @@ export const dbApi = {
   async addListeningSeconds(seconds: number): Promise<void> {
     if (seconds <= 0) return;
     const db = await getDB();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDateKey();
     const existing = await db.get('dailyStats', today);
     await db.put('dailyStats', {
       date: today,

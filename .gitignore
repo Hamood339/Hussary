@@ -28,3 +28,4 @@ audio_64k_staging/
 *.sw?
 .claude
 .netlify
+DEPLOY.md

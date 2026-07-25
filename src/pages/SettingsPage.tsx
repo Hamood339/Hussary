@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Bell, Gauge, HardDrive, Moon, PlayCircle, Sun, SunMoon, Trash2 } from 'lucide-react';
+import { AlertTriangle, Bell, HardDrive, Moon, PlayCircle, Sun, SunMoon, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
 import { Button } from '@/components/ui/Button';
 import { useSettingsStore } from '@/store/settingsStore';
+import { usePlayerStore } from '@/store/playerStore';
 import { dbApi } from '@/lib/db';
 import { cn } from '@/lib/utils';
 import type { ThemePreference } from '@/types';
@@ -14,8 +15,6 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }
   { value: 'system', label: 'Système', icon: SunMoon },
 ];
 
-const RATES = [0.75, 1, 1.25, 1.5, 1.75, 2];
-
 function formatBytes(bytes: number) {
   if (bytes === 0) return '0 Mo';
   const mb = bytes / (1024 * 1024);
@@ -24,8 +23,7 @@ function formatBytes(bytes: number) {
 }
 
 export function SettingsPage() {
-  const { theme, playbackRate, autoplay, notificationsEnabled, setTheme, setPlaybackRate, setAutoplay, setNotificationsEnabled } =
-    useSettingsStore();
+  const { theme, autoplay, notificationsEnabled, setTheme, setAutoplay, setNotificationsEnabled } = useSettingsStore();
   const [storage, setStorage] = useState<{ usage: number; quota: number } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -38,12 +36,8 @@ export function SettingsPage() {
   }, []);
 
   async function handleNotificationToggle(value: boolean) {
-    if (value && 'Notification' in window) {
-      const perm = await Notification.requestPermission();
-      await setNotificationsEnabled(perm === 'granted');
-    } else {
-      await setNotificationsEnabled(value);
-    }
+    await setNotificationsEnabled(value);
+    usePlayerStore.getState().refreshMediaMetadata();
   }
 
   async function handleReset() {
@@ -80,29 +74,6 @@ export function SettingsPage() {
         </div>
       </Card>
 
-      <Card className="mt-4 p-5">
-        <div className="flex items-center gap-2.5">
-          <Gauge className="h-4.5 w-4.5 text-emerald-700 dark:text-gold-300" />
-          <h2 className="font-display text-base font-semibold text-ink-950 dark:text-white">Vitesse de lecture par défaut</h2>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {RATES.map((rate) => (
-            <button
-              key={rate}
-              onClick={() => setPlaybackRate(rate)}
-              className={cn(
-                'rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                playbackRate === rate
-                  ? 'border-emerald-600/40 bg-emerald-900/8 text-emerald-700 dark:border-gold-400/40 dark:bg-white/8 dark:text-gold-300'
-                  : 'border-ink-900/8 text-ink-900/55 hover:bg-ink-900/5 dark:border-white/10 dark:text-white/50 dark:hover:bg-white/5'
-              )}
-            >
-              {rate}×
-            </button>
-          ))}
-        </div>
-      </Card>
-
       <Card className="mt-4 divide-y divide-ink-900/6 p-5 dark:divide-white/8">
         <div className="flex items-center justify-between pb-4">
           <div className="flex items-center gap-3">
@@ -119,7 +90,9 @@ export function SettingsPage() {
             <Bell className="h-4.5 w-4.5 text-emerald-700 dark:text-gold-300" />
             <div>
               <p className="text-sm font-medium text-ink-950 dark:text-white">Notifications</p>
-              <p className="text-xs text-ink-900/50 dark:text-white/45">Contrôles de lecture affichés en notification</p>
+              <p className="text-xs text-ink-900/50 dark:text-white/45">
+                Afficher les contrôles de lecture sur l’écran verrouillé
+              </p>
             </div>
           </div>
           <Switch

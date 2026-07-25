@@ -6,16 +6,14 @@ interface SettingsState extends AppSettings {
   isLoaded: boolean;
   hydrate: () => Promise<void>;
   setTheme: (theme: ThemePreference) => Promise<void>;
-  setPlaybackRate: (rate: number) => Promise<void>;
   setAutoplay: (value: boolean) => Promise<void>;
   setNotificationsEnabled: (value: boolean) => Promise<void>;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
-  playbackRate: 1,
   autoplay: true,
-  notificationsEnabled: false,
+  notificationsEnabled: true,
 };
 
 function applyThemeToDocument(theme: ThemePreference) {
@@ -47,11 +45,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ theme });
     applyThemeToDocument(theme);
     await dbApi.setSettings({ ...get(), theme });
-  },
-
-  setPlaybackRate: async (playbackRate) => {
-    set({ playbackRate });
-    await dbApi.setSettings({ ...get(), playbackRate });
   },
 
   setAutoplay: async (autoplay) => {

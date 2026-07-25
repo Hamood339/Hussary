@@ -49,7 +49,6 @@ export interface ContinueListeningRecord {
 
 export interface AppSettings {
   theme: ThemePreference;
-  playbackRate: number;
   autoplay: boolean;
   notificationsEnabled: boolean;
 }
