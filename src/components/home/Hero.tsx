@@ -43,7 +43,7 @@ export function Hero() {
             transition={{ delay: 0.05 }}
             className="font-display mt-1 max-w-md text-3xl font-semibold leading-tight text-white sm:text-4xl"
           >
-            La récitation du <span className="text-gold-300">Cheikh Al-Hussary</span>
+            <span className="text-gold-300">Cheikh Mahmoud Al-Hussary</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
