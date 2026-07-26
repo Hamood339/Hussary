@@ -3,6 +3,7 @@ import { AlertTriangle, Bell, HardDrive, Moon, PlayCircle, Sun, SunMoon, Trash2 
 import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
 import { Button } from '@/components/ui/Button';
+import { FeedbackCard } from '@/components/settings/FeedbackCard';
 import { useSettingsStore } from '@/store/settingsStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { dbApi } from '@/lib/db';
@@ -124,6 +125,8 @@ export function SettingsPage() {
           <p className="mt-3 text-xs text-ink-900/45 dark:text-white/40">Estimation du stockage indisponible sur ce navigateur.</p>
         )}
       </Card>
+
+      <FeedbackCard />
 
       <Card className="mt-4 border-red-500/20 p-5">
         <div className="flex items-center gap-2.5">
