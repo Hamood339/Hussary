@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { BookHeart, Home, ListMusic, Settings } from 'lucide-react';
+import { BookHeart, BookOpen, Home, ListMusic, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
   { to: '/', label: 'Accueil', icon: Home },
   { to: '/surahs', label: 'Sourates', icon: ListMusic },
+  { to: '/mushaf', label: 'Mushaf', icon: BookOpen },
   { to: '/favorites', label: 'Favoris', icon: BookHeart },
   { to: '/settings', label: 'Réglages', icon: Settings },
 ];
@@ -19,7 +20,7 @@ export function BottomNav() {
           end={to === '/'}
           className={({ isActive }) =>
             cn(
-              'flex flex-col items-center gap-0.5 rounded-full px-4 py-1.5 text-[10px] font-medium transition-colors',
+              'flex flex-col items-center gap-0.5 rounded-full px-3 py-1.5 text-[10px] font-medium transition-colors',
               isActive
                 ? 'text-emerald-700 dark:text-gold-300'
                 : 'text-ink-900/45 dark:text-white/40'

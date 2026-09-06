@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { BookHeart, Clock, Home, ListMusic, Moon, Settings } from 'lucide-react';
+import { BookHeart, BookOpen, Clock, Home, ListMusic, Moon, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
   { to: '/', label: 'Accueil', icon: Home },
   { to: '/surahs', label: 'Sourates', icon: ListMusic },
+  { to: '/mushaf', label: 'Mushaf', icon: BookOpen },
   { to: '/favorites', label: 'Favoris', icon: BookHeart },
   { to: '/recent', label: 'Récemment écoutées', icon: Clock },
   { to: '/settings', label: 'Réglages', icon: Settings },

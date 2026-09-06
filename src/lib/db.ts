@@ -7,10 +7,11 @@ import type {
   FavoriteRecord,
   HistoryRecord,
 } from '@/types';
+import type { ReadingPositionRecord } from '@/types/mushaf';
 import { localDateKey } from '@/lib/utils';
 
 const DB_NAME = 'hussary-quran-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 interface HussaryDB extends DBSchema {
   favorites: {
@@ -43,6 +44,10 @@ interface HussaryDB extends DBSchema {
     key: number;
     value: { surahNumber: number; completedAt: number };
   };
+  readingPosition: {
+    key: string;
+    value: ReadingPositionRecord;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<HussaryDB>> | null = null;
@@ -74,6 +79,9 @@ export function getDB() {
         if (!db.objectStoreNames.contains('completed')) {
           db.createObjectStore('completed', { keyPath: 'surahNumber' });
         }
+        if (!db.objectStoreNames.contains('readingPosition')) {
+          db.createObjectStore('readingPosition');
+        }
       },
     });
   }
@@ -83,6 +91,7 @@ export function getDB() {
 const HISTORY_LIMIT = 30;
 const SETTINGS_KEY = 'app-settings';
 const CONTINUE_KEY = 'current';
+const READING_KEY = 'current';
 
 export const dbApi = {
   // Favorites
@@ -169,6 +178,16 @@ export const dbApi = {
     return db.getAll('dailyStats');
   },
 
+  // Reading position (Mushaf) — single active record
+  async getReadingPosition(): Promise<ReadingPositionRecord | undefined> {
+    const db = await getDB();
+    return db.get('readingPosition', READING_KEY);
+  },
+  async setReadingPosition(record: ReadingPositionRecord): Promise<void> {
+    const db = await getDB();
+    await db.put('readingPosition', record, READING_KEY);
+  },
+
   // Completed recitations
   async markCompleted(surahNumber: number): Promise<void> {
     const db = await getDB();
@@ -183,7 +202,16 @@ export const dbApi = {
   async resetAll(): Promise<void> {
     const db = await getDB();
     await Promise.all(
-      ['favorites', 'history', 'bookmarks', 'continueListening', 'settings', 'dailyStats', 'completed'].map(
+      [
+        'favorites',
+        'history',
+        'bookmarks',
+        'continueListening',
+        'settings',
+        'dailyStats',
+        'completed',
+        'readingPosition',
+      ].map(
         (name) => db.clear(name as never)
       )
     );

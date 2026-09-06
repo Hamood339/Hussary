@@ -3,6 +3,7 @@ import { Hero } from '@/components/home/Hero';
 import { StatsGrid } from '@/components/home/StatsGrid';
 import { SectionRow } from '@/components/home/SectionRow';
 import { ContinueListeningCard } from '@/components/home/ContinueListeningCard';
+import { ContinueReadingCard } from '@/components/home/ContinueReadingCard';
 import { SurahCard } from '@/components/surah/SurahCard';
 import { SearchBar } from '@/components/common/SearchBar';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -55,6 +56,8 @@ export function HomePage() {
           <ContinueListeningCard />
         </section>
       )}
+
+      <ContinueReadingCard />
 
       {favoriteSurahs.length > 0 && (
         <SectionRow title="Favoris" viewAllHref="/favorites">

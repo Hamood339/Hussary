@@ -31,9 +31,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Les données du Mushaf (604 JSON + ~606 polices) sont trop nombreuses
+        // pour le précache : elles passent par runtimeCaching ci-dessous.
+        globIgnores: ['**/quran/**'],
         cleanupOutdatedCaches: true,
-        // Une requête pour /audio/*.mp3 ne doit jamais renvoyer index.html.
-        navigateFallbackDenylist: [/^\/audio\//],
+        // Une requête /audio/* ou /quran/* ne doit jamais renvoyer index.html.
+        navigateFallbackDenylist: [/^\/audio\//, /^\/quran\//],
         runtimeCaching: [
           {
             urlPattern: /\/audio\/.*\.mp3$/i,
@@ -54,6 +57,16 @@ export default defineConfig({
                 // ne jamais enregistrer un audio partiel comme s'il etait entier.
                 statuses: [200],
               },
+            },
+          },
+          {
+            // Texte du Mushaf + polices QCF v2 : léger, mis en cache à la lecture.
+            urlPattern: /\/quran\/.*\.(?:json|woff2)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'quran-mushaf-cache',
+              expiration: { maxEntries: 1400, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [200] },
             },
           },
           {
