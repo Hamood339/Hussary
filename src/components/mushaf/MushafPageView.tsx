@@ -41,28 +41,26 @@ export function MushafPageView({ page, meta, fontScale, onData }: Props) {
   const fontFamily = fontFamilyForPage(page);
 
   return (
-    <div
-      className="mushaf-paper @container"
-      style={{ '--mushaf-scale': fontScale } as CSSProperties}
-    >
+    <div className="mushaf-paper" style={{ '--mushaf-scale': fontScale } as CSSProperties}>
       <div className="mushaf-frame">
         {!ready ? (
-          <div className="flex h-full flex-col justify-between gap-2 py-4">
+          <div className="mushaf-lines">
             {Array.from({ length: 15 }).map((_, i) => (
-              <Skeleton key={i} className="h-[3.2%] w-full rounded" />
+              <div key={i} className="mushaf-line justify-center">
+                <div style={{ width: `${70 + ((i * 37) % 26)}%` }}>
+                  <Skeleton className="h-[0.9em] w-full rounded" />
+                </div>
+              </div>
             ))}
           </div>
         ) : !data ? (
-          <div className="flex h-full items-center justify-center px-6 text-center">
+          <div className="flex flex-1 items-center justify-center px-6 text-center">
             <p className="text-sm text-ink-900/50 dark:text-white/45">
               Page {page} indisponible. Lancez <code>node scripts/build-quran-data.mjs</code>.
             </p>
           </div>
         ) : (
-          <div
-            className="mushaf-lines"
-            data-centered={data.lines.length < 15 ? '' : undefined}
-          >
+          <div className="mushaf-lines">
             {data.lines.map((line) => (
               <MushafLineView
                 key={line.line}

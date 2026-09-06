@@ -125,62 +125,72 @@ body {
   }
 }
 
-/* ---- Mushaf : rendu "page imprimee" ---- */
+/* ---- Mushaf : 604 pages, 15 lignes qui remplissent la page ----
+   Au zoom 1 : la page = la hauteur visible, les 15 lignes se répartissent
+   pour la remplir entièrement (aucun espace résiduel), sans défilement.
+   Au zoom (A+) : le texte grossit, les lignes s'agrandissent, la page
+   dépasse l'écran et le défilement vertical prend le relais. */
 .mushaf-paper {
-  height: 100%;
-  aspect-ratio: 0.64;
-  max-width: 100%;
-  margin-inline: auto;
-  background: #fbf6e9;
-  border-radius: 6px;
-  box-shadow: 0 12px 44px -14px rgba(6, 20, 15, 0.35), inset 0 0 70px rgba(120, 90, 30, 0.06);
-  --mushaf-fs: calc(var(--mushaf-scale, 1) * var(--mushaf-base, 6cqw));
-}
-.dark .mushaf-paper {
-  background: #14110b;
-  box-shadow: 0 12px 44px -14px rgba(0, 0, 0, 0.65), inset 0 0 70px rgba(0, 0, 0, 0.4);
-}
-.mushaf-frame {
-  height: 100%;
-  margin: 2.4%;
-  padding: 4.5% 5%;
-  border: 2px solid rgba(120, 90, 30, 0.5);
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 3px rgba(120, 90, 30, 0.16);
-}
-.dark .mushaf-frame {
-  border-color: rgba(228, 191, 101, 0.28);
-  box-shadow: inset 0 0 0 3px rgba(228, 191, 101, 0.1);
-}
-.mushaf-lines {
+  /* ~3,8 % de la hauteur visible : 15 lignes tiennent pile au zoom 1.
+     ↓ si une page dense défile encore au zoom 1 ; ↑ pour un texte plus grand. */
+  --mushaf-base: 3.8cqh;
+  --mushaf-fs: calc(var(--mushaf-scale, 1) * var(--mushaf-base));
+
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
+  width: min(92vw, 440px); /* largeur FIXE : ne bouge pas au zoom */
+  min-height: calc(100cqh - 2px);
+  margin-inline: auto;
+  background: #ffffff;
+  border: 1px solid color-mix(in oklab, var(--color-ink-900) 7%, transparent);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lifted);
 }
-.mushaf-lines[data-centered] {
-  justify-content: center;
-  gap: 2.4%;
+.dark .mushaf-paper {
+  background: var(--color-ink-900);
+  border-color: color-mix(in oklab, #ffffff 8%, transparent);
+}
+.mushaf-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 12px;
+  padding: 10px clamp(12px, 4.5%, 24px);
+  border: 1px solid color-mix(in oklab, var(--color-emerald-700) 20%, transparent);
+  border-radius: 16px;
+}
+.dark .mushaf-frame {
+  border-color: color-mix(in oklab, var(--color-gold-300) 18%, transparent);
+}
+/* Les 15 lignes remplissent la hauteur du cadre. */
+.mushaf-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .mushaf-line {
+  flex: 1; /* part égale de la hauteur -> page remplie, interligne régulier */
+  min-height: calc(var(--mushaf-fs) * 1.5);
   display: flex;
   align-items: center;
-  min-height: 0;
   direction: rtl;
 }
-.mushaf-ayah-text {
+/* Ligne d'ayah : mots étirés bord à bord (comme l'imprimé). Ne revient à la
+   ligne qu'au zoom, quand le texte ne tient plus sur la largeur fixe. */
+.mushaf-line-text {
   display: flex;
-  width: 100%;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
+  width: 100%;
   font-size: var(--mushaf-fs);
-  line-height: 1;
-  overflow: hidden;
+  line-height: 1.35;
+  row-gap: 0.3em;
 }
-.mushaf-ayah-text > span {
+.mushaf-line-text > span {
   white-space: nowrap;
 }
-.mushaf-ayah-line.is-centered .mushaf-ayah-text {
+.mushaf-ayah-line.is-centered .mushaf-line-text {
   justify-content: center;
-  gap: 0.3em;
+  column-gap: 0.35em;
 }

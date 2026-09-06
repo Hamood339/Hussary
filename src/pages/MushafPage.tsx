@@ -12,10 +12,12 @@ import { MushafDataMissing } from '@/components/mushaf/MushafDataMissing';
 
 type Dir = 'next' | 'prev';
 
+// Comme un vrai livre en RTL : on va vers la page suivante en faisant
+// glisser la page vers la DROITE ; la nouvelle page arrive par la gauche.
 const variants: Variants = {
-  enter: (dir: Dir) => ({ x: dir === 'next' ? '100%' : '-100%', opacity: 0 }),
+  enter: (dir: Dir) => ({ x: dir === 'next' ? '-100%' : '100%', opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit: (dir: Dir) => ({ x: dir === 'next' ? '-100%' : '100%', opacity: 0 }),
+  exit: (dir: Dir) => ({ x: dir === 'next' ? '100%' : '-100%', opacity: 0 }),
 };
 
 export function MushafPage() {
@@ -70,8 +72,9 @@ export function MushafPage() {
   function onDragEnd(_e: unknown, info: PanInfo) {
     const dx = info.offset.x;
     const vx = info.velocity.x;
-    if (dx < -55 || vx < -450) turn(1); // tire vers la gauche -> page suivante
-    else if (dx > 55 || vx > 450) turn(-1);
+    // Glissement vers la DROITE -> page suivante (comme tourner la page d'un livre arabe).
+    if (dx > 55 || vx > 450) turn(1);
+    else if (dx < -55 || vx < -450) turn(-1);
   }
 
   if (metaState === 'missing') {
@@ -93,7 +96,7 @@ export function MushafPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="mx-auto flex h-[calc(100dvh-12rem)] max-h-[860px] max-w-[460px] flex-col">
+      <div className="mx-auto flex h-[calc(100dvh-11rem)] max-w-[460px] flex-col">
         {/* En-tete */}
         <motion.div
           animate={{ opacity: immersive ? 0 : 1, y: immersive ? -8 : 0 }}
@@ -132,8 +135,9 @@ export function MushafPage() {
           </div>
         </motion.div>
 
-        {/* Zone de lecture */}
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+        {/* Zone de lecture — conteneur de taille : sert de référence à la
+            police (cqh) pour que 15 lignes tiennent sans défiler au zoom 1. */}
+        <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto [container-type:size]">
           <AnimatePresence initial={false} custom={dir} mode="popLayout">
             <motion.div
               key={currentPage}
@@ -148,7 +152,7 @@ export function MushafPage() {
               dragElastic={0.12}
               onDragEnd={onDragEnd}
               onClick={() => setImmersive((v) => !v)}
-              className="absolute inset-0 flex items-center justify-center px-1"
+              className="flex min-h-full w-full items-start justify-center px-1"
             >
               <MushafPageView page={currentPage} meta={meta} fontScale={fontScale} />
             </motion.div>
