@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { Pause, Play, RefreshCw, SkipBack, SkipForward, WifiOff } from 'lucide-react';
 import { usePlayerStore } from '@/store/playerStore';
 import { SurahArtwork } from '@/components/surah/SurahArtwork';
 import { formatTime } from '@/lib/utils';
@@ -9,9 +9,11 @@ export function MiniPlayer() {
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
+  const error = usePlayerStore((s) => s.error);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const playNext = usePlayerStore((s) => s.playNext);
   const playPrevious = usePlayerStore((s) => s.playPrevious);
+  const retryPlayback = usePlayerStore((s) => s.retryPlayback);
   const setExpanded = usePlayerStore((s) => s.setExpanded);
 
   if (!currentSurah) return null;
@@ -25,6 +27,23 @@ export function MiniPlayer() {
       transition={{ type: 'spring', damping: 26, stiffness: 260 }}
       className="fixed inset-x-3 bottom-[76px] z-30 sm:inset-x-auto sm:bottom-4 sm:left-[calc(16rem+1rem)] sm:right-4"
     >
+      {error && (
+        <div className="glass mb-2 flex items-center gap-2 rounded-2xl border border-red-500/25 px-3 py-2 shadow-lifted">
+          <WifiOff className="h-4 w-4 shrink-0 text-red-500" />
+          <span className="min-w-0 flex-1 text-xs text-ink-900/70 dark:text-white/70">
+            {error === 'offline-missing'
+              ? 'Sourate non téléchargée. Connectez-vous, ou téléchargez-la depuis les Réglages.'
+              : 'Lecture interrompue. Vérifiez votre connexion.'}
+          </span>
+          <button
+            onClick={() => retryPlayback()}
+            className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-700 px-2.5 py-1 text-xs font-medium text-white dark:bg-emerald-500 dark:text-emerald-950"
+          >
+            <RefreshCw className="h-3 w-3" />
+            Réessayer
+          </button>
+        </div>
+      )}
       <button
         onClick={() => setExpanded(true)}
         className="glass relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-ink-900/8 px-3 py-2.5 text-left shadow-lifted dark:border-white/10"

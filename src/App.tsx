@@ -12,6 +12,7 @@ import { UpdateNotification } from '@/components/common/UpdateNotification';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { initPlayerEngineSync } from '@/store/playerStore';
+import { requestPersistentStorage } from '@/lib/offlineAudio';
 
 export default function App() {
   const hydrateLibrary = useLibraryStore((s) => s.hydrate);
@@ -20,6 +21,7 @@ export default function App() {
   useEffect(() => {
     void hydrateLibrary();
     void hydrateSettings();
+    void requestPersistentStorage();
     const cleanup = initPlayerEngineSync();
     return cleanup;
     // eslint-disable-next-line react-hooks/exhaustive-deps

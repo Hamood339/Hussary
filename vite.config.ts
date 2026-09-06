@@ -31,19 +31,28 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        cleanupOutdatedCaches: true,
+        // Une requête pour /audio/*.mp3 ne doit jamais renvoyer index.html.
+        navigateFallbackDenylist: [/^\/audio\//],
         runtimeCaching: [
           {
             urlPattern: /\/audio\/.*\.mp3$/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'quran-audio-cache',
+              // "-v2" : l'ancien cache a pu stocker des réponses 206 partielles
+              // (fichiers tronqués -> la lecture se coupe en plein milieu).
+              // Nouveau nom = on repart d'un cache propre chez tous les users.
+              cacheName: 'quran-audio-cache-v2',
               rangeRequests: true,
               expiration: {
-                maxEntries: 114,
+                maxEntries: 120,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
-                statuses: [0, 200, 206],
+                // 200 uniquement : on ne met en cache que des fichiers complets.
+                // 206 (fragment Range) et 0 (réponse opaque) sont exclus pour
+                // ne jamais enregistrer un audio partiel comme s'il etait entier.
+                statuses: [200],
               },
             },
           },

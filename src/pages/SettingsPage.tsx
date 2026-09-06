@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
 import { Button } from '@/components/ui/Button';
 import { FeedbackCard } from '@/components/settings/FeedbackCard';
+import { OfflineDownloadCard } from '@/components/settings/OfflineDownloadCard';
 import { useSettingsStore } from '@/store/settingsStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { dbApi } from '@/lib/db';
@@ -90,9 +91,9 @@ export function SettingsPage() {
           <div className="flex items-center gap-3">
             <Bell className="h-4.5 w-4.5 text-emerald-700 dark:text-gold-300" />
             <div>
-              <p className="text-sm font-medium text-ink-950 dark:text-white">Notifications</p>
+              <p className="text-sm font-medium text-ink-950 dark:text-white">Infos sur l’écran verrouillé</p>
               <p className="text-xs text-ink-900/50 dark:text-white/45">
-                Afficher les contrôles de lecture sur l’écran verrouillé
+                Afficher le nom de la sourate sur l’écran verrouillé et les casques
               </p>
             </div>
           </div>
@@ -125,6 +126,8 @@ export function SettingsPage() {
           <p className="mt-3 text-xs text-ink-900/45 dark:text-white/40">Estimation du stockage indisponible sur ce navigateur.</p>
         )}
       </Card>
+
+      <OfflineDownloadCard />
 
       <FeedbackCard />
 

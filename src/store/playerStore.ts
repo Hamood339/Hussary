@@ -3,7 +3,14 @@ import type { RepeatMode, SleepTimerMode, Surah } from '@/types';
 import { SURAHS } from '@/data/surahs';
 import { audioEngine } from '@/services/audioEngine';
 import { dbApi } from '@/lib/db';
+import { isCached } from '@/lib/offlineAudio';
 import { useSettingsStore } from '@/store/settingsStore';
+
+/**
+ * `offline-missing` : hors ligne et la sourate n'est pas telechargee.
+ * `playback`        : echec de lecture cote navigateur (reseau, fichier illisible).
+ */
+export type PlayerError = 'offline-missing' | 'playback' | null;
 
 interface PlayerState {
   currentSurah: Surah | null;
@@ -14,11 +21,13 @@ interface PlayerState {
   playbackRate: number;
   repeatMode: RepeatMode;
   isExpanded: boolean;
+  error: PlayerError;
   sleepTimerMode: SleepTimerMode;
   sleepTimerEndsAt: number | null;
   sleepTimerRemaining: number | null;
 
   playSurah: (surah: Surah, startAt?: number) => void;
+  retryPlayback: () => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrevious: () => void;
@@ -60,17 +69,36 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playbackRate: 1,
   repeatMode: 'off',
   isExpanded: false,
+  error: null,
   sleepTimerMode: null,
   sleepTimerEndsAt: null,
   sleepTimerRemaining: null,
 
   playSurah: (surah, startAt = 0) => {
     const { playbackRate } = get();
+    set({ currentSurah: surah, currentTime: startAt, error: null });
     audioEngine.load(surah.audioSrc, true, startAt);
     audioEngine.setPlaybackRate(playbackRate);
-    set({ currentSurah: surah, currentTime: startAt });
     get().refreshMediaMetadata();
     void dbApi.recordHistory(surah.number, startAt);
+
+    // Retour immediat si on est hors ligne et que le fichier n'est pas en cache,
+    // au lieu de laisser l'utilisateur devant un lecteur muet.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      void isCached(surah.audioSrc).then((cached) => {
+        if (!cached && get().currentSurah?.number === surah.number) {
+          audioEngine.pause();
+          set({ error: 'offline-missing' });
+        }
+      });
+    }
+  },
+
+  retryPlayback: () => {
+    const { currentSurah } = get();
+    if (!currentSurah) return;
+    set({ error: null });
+    audioEngine.reload();
   },
 
   togglePlay: () => {
@@ -153,15 +181,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   refreshMediaMetadata: () => {
     const { currentSurah } = get();
     if (!currentSurah) return;
-    if (useSettingsStore.getState().notificationsEnabled) {
-      audioEngine.updateMediaMetadata({
-        title: `${currentSurah.number}. ${currentSurah.frenchName}`,
-        artist: 'Cheikh Mahmoud Khalil Al-Hussary',
-        album: 'Hussary Quran',
-      });
-    } else {
-      audioEngine.clearMediaMetadata();
-    }
+    // On pose TOUJOURS des metadonnees MediaSession : c'est ce qui maintient la
+    // lecture active en arriere-plan sur mobile (surtout Android, ou l'audio est
+    // coupe s'il n'y a pas de notification media). Le reglage "notifications" ne
+    // fait plus que masquer le nom de la sourate.
+    const showDetails = useSettingsStore.getState().notificationsEnabled;
+    audioEngine.updateMediaMetadata(
+      showDetails
+        ? {
+            title: `${currentSurah.number}. ${currentSurah.frenchName}`,
+            artist: 'Cheikh Mahmoud Khalil Al-Hussary',
+            album: 'Hussary Quran',
+          }
+        : { title: 'Hussary Quran', artist: '', album: 'Hussary Quran' },
+    );
   },
 }));
 
@@ -173,11 +206,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
  */
 export function initPlayerEngineSync() {
   const unsubscribeState = audioEngine.subscribe((state) => {
+    let error = usePlayerStore.getState().error;
+    if (state.error) error = error === 'offline-missing' ? 'offline-missing' : 'playback';
+    else if (state.isPlaying) error = null; // la lecture a repris -> on efface
+
     usePlayerStore.setState({
       isPlaying: state.isPlaying,
       isBuffering: state.isBuffering,
       currentTime: state.currentTime,
       duration: state.duration || usePlayerStore.getState().currentSurah?.estimatedDuration || 0,
+      error,
     });
     audioEngine.setMediaPlaybackState(state.isPlaying ? 'playing' : 'paused');
     audioEngine.updatePositionState();

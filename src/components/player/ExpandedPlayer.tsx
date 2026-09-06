@@ -7,11 +7,14 @@ import {
   Moon,
   Pause,
   Play,
+  RefreshCw,
   Repeat,
   Repeat1,
   SkipBack,
   SkipForward,
+  WifiOff,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SeekBar } from '@/components/player/SeekBar';
 import { SurahArtwork } from '@/components/surah/SurahArtwork';
@@ -31,10 +34,13 @@ const SLEEP_OPTIONS: { mode: SleepTimerMode; label: string }[] = [
 ];
 
 export function ExpandedPlayer() {
+  const navigate = useNavigate();
   const isExpanded = usePlayerStore((s) => s.isExpanded);
   const setExpanded = usePlayerStore((s) => s.setExpanded);
   const currentSurah = usePlayerStore((s) => s.currentSurah);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const error = usePlayerStore((s) => s.error);
+  const retryPlayback = usePlayerStore((s) => s.retryPlayback);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
@@ -96,6 +102,39 @@ export function ExpandedPlayer() {
             <Bookmark className={cn('h-5 w-5', showBookmarks && 'fill-gold-400')} />
           </button>
         </div>
+
+        {error && (
+          <div className="mx-5 mb-1 flex flex-col gap-2 rounded-2xl border border-red-500/25 bg-red-500/5 p-3">
+            <div className="flex items-center gap-2">
+              <WifiOff className="h-4 w-4 shrink-0 text-red-500" />
+              <p className="text-xs text-ink-900/70 dark:text-white/70">
+                {error === 'offline-missing'
+                  ? 'Cette sourate n’est pas encore disponible hors ligne.'
+                  : 'Lecture interrompue. Vérifiez votre connexion et réessayez.'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => retryPlayback()}
+                className="flex items-center gap-1 rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white dark:bg-emerald-500 dark:text-emerald-950"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Réessayer
+              </button>
+              {error === 'offline-missing' && (
+                <button
+                  onClick={() => {
+                    setExpanded(false);
+                    navigate('/settings');
+                  }}
+                  className="rounded-full border border-ink-900/12 px-3 py-1.5 text-xs font-medium text-ink-900/70 dark:border-white/15 dark:text-white/70"
+                >
+                  Télécharger
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto px-6 pb-8">
           {!showBookmarks ? (

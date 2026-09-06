@@ -24,6 +24,11 @@ class AudioEngine {
     error: null,
   };
 
+  // --- Recuperation automatique en cas de coupure reseau / blocage buffer ---
+  private stalledTimer: ReturnType<typeof setTimeout> | null = null;
+  private retries = 0;
+  private intendedPlaying = false; // ce que l'utilisateur veut, independamment de l'etat reel
+
   constructor() {
     this.audio = new Audio();
     this.audio.preload = 'metadata';
@@ -34,16 +39,77 @@ class AudioEngine {
     const a = this.audio;
     a.addEventListener('play', () => this.update({ isPlaying: true, error: null }));
     a.addEventListener('pause', () => this.update({ isPlaying: false }));
-    a.addEventListener('waiting', () => this.update({ isBuffering: true }));
-    a.addEventListener('playing', () => this.update({ isBuffering: false }));
-    a.addEventListener('canplay', () => this.update({ isBuffering: false }));
+    a.addEventListener('waiting', () => {
+      this.update({ isBuffering: true });
+      this.armStalledTimer();
+    });
+    a.addEventListener('stalled', () => this.armStalledTimer());
+    a.addEventListener('playing', () => {
+      this.retries = 0;
+      this.clearStalledTimer();
+      this.update({ isBuffering: false });
+    });
+    a.addEventListener('canplay', () => {
+      this.clearStalledTimer();
+      this.update({ isBuffering: false });
+    });
     a.addEventListener('timeupdate', () => this.update({ currentTime: a.currentTime }));
     a.addEventListener('durationchange', () => {
       if (Number.isFinite(a.duration)) this.update({ duration: a.duration });
     });
-    a.addEventListener('error', () => {
+    a.addEventListener('error', () => this.recover());
+  }
+
+  private armStalledTimer() {
+    this.clearStalledTimer();
+    // Le buffer est vide depuis trop longtemps -> on tente une recuperation.
+    this.stalledTimer = setTimeout(() => {
+      if (this.intendedPlaying && this.audio.readyState < 3) this.recover();
+    }, 15000);
+  }
+
+  private clearStalledTimer() {
+    if (this.stalledTimer) {
+      clearTimeout(this.stalledTimer);
+      this.stalledTimer = null;
+    }
+  }
+
+  /**
+   * Recharge la source et reprend a la position courante. Plafonne a 3 essais
+   * (avec un delai croissant) avant d'abandonner et de remonter une erreur.
+   */
+  private recover() {
+    this.clearStalledTimer();
+    if (!this.audio.src) return;
+    if (this.retries >= 3) {
       this.update({ error: 'Impossible de lire ce fichier audio.', isBuffering: false, isPlaying: false });
-    });
+      return;
+    }
+    this.retries += 1;
+    const resumeAt = this.audio.currentTime || 0;
+    const delay = 1200 * this.retries;
+    setTimeout(() => {
+      if (!this.audio.src) return;
+      this.audio.load();
+      const onLoaded = () => {
+        this.audio.removeEventListener('loadedmetadata', onLoaded);
+        try {
+          if (resumeAt > 0) this.audio.currentTime = resumeAt;
+        } catch {
+          // position invalide -> on repart du debut
+        }
+        if (this.intendedPlaying) void this.play();
+      };
+      this.audio.addEventListener('loadedmetadata', onLoaded);
+    }, delay);
+  }
+
+  /** Recuperation declenchee manuellement par l'utilisateur ("Reessayer"). */
+  reload() {
+    this.retries = 0;
+    this.intendedPlaying = true;
+    this.recover();
   }
 
   private update(partial: Partial<AudioEngineState>) {
@@ -62,6 +128,9 @@ class AudioEngine {
   }
 
   load(src: string, autoplay: boolean, startAt = 0) {
+    this.retries = 0;
+    this.clearStalledTimer();
+    if (autoplay) this.intendedPlaying = true;
     if (this.audio.src.endsWith(src)) {
       if (startAt > 0) this.audio.currentTime = startAt;
       if (autoplay) void this.play();
@@ -80,6 +149,7 @@ class AudioEngine {
   }
 
   async play() {
+    this.intendedPlaying = true;
     try {
       await this.audio.play();
     } catch {
@@ -88,6 +158,8 @@ class AudioEngine {
   }
 
   pause() {
+    this.intendedPlaying = false;
+    this.clearStalledTimer();
     this.audio.pause();
   }
 
