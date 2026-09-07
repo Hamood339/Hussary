@@ -1,6 +1,7 @@
 import type { MushafLine } from '@/types/mushaf';
 import { linePlainText } from '@/lib/mushafData';
 import { cn } from '@/lib/utils';
+import { SurahBanner } from '@/components/mushaf/SurahBanner';
 
 // Basmala en orthographe Uthmani — repli si la source QUL ne fournit pas les
 // glyphes de la ligne "basmallah". Phrase identique dans tous les mushafs.
@@ -16,20 +17,7 @@ interface Props {
 
 export function MushafLineView({ line, pageFontFamily, surahName, activeAyah }: Props) {
   if (line.type === 'surah_name') {
-    return (
-      <div className="mushaf-line justify-center">
-        <div className="flex w-full max-w-[82%] items-center justify-center gap-3 rounded-xl border border-gold-300/40 bg-gradient-to-b from-gold-50 to-transparent px-4 py-1 dark:border-gold-400/20 dark:from-gold-400/8 dark:to-transparent">
-          <span className="h-px flex-1 bg-gold-400/30" />
-          <span
-            className="font-arabic leading-none text-emerald-800 dark:text-gold-200"
-            style={{ fontSize: 'calc(var(--mushaf-fs) * 0.92)' }}
-          >
-            {surahName ? `سورة ${surahName}` : `سورة ${line.surah ?? ''}`}
-          </span>
-          <span className="h-px flex-1 bg-gold-400/30" />
-        </div>
-      </div>
-    );
+    return <SurahBanner name={surahName} number={line.surah} />;
   }
 
   if (line.type === 'basmallah') {

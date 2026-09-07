@@ -150,17 +150,12 @@ body {
   background: var(--color-ink-900);
   border-color: color-mix(in oklab, #ffffff 8%, transparent);
 }
+/* Pas de cadre : juste une marge intérieure pour le texte. */
 .mushaf-frame {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin: 12px;
-  padding: 10px clamp(12px, 4.5%, 24px);
-  border: 1px solid color-mix(in oklab, var(--color-emerald-700) 20%, transparent);
-  border-radius: 16px;
-}
-.dark .mushaf-frame {
-  border-color: color-mix(in oklab, var(--color-gold-300) 18%, transparent);
+  padding: 18px clamp(16px, 6%, 30px);
 }
 /* Les 15 lignes remplissent la hauteur du cadre. */
 .mushaf-lines {
@@ -193,4 +188,8 @@ body {
 .mushaf-ayah-line.is-centered .mushaf-line-text {
   justify-content: center;
   column-gap: 0.35em;
+}
+/* Extrémités texturées du bandeau de sourate (grille de points fins). */
+.mushaf-banner-fill {
+  background: radial-gradient(circle at center, currentColor 0 1px, transparent 1.7px) 0 0 / 8px 8px;
 }
