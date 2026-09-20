@@ -125,71 +125,76 @@ body {
   }
 }
 
-/* ---- Mushaf : 604 pages, 15 lignes qui remplissent la page ----
-   Au zoom 1 : la page = la hauteur visible, les 15 lignes se répartissent
-   pour la remplir entièrement (aucun espace résiduel), sans défilement.
-   Au zoom (A+) : le texte grossit, les lignes s'agrandissent, la page
-   dépasse l'écran et le défilement vertical prend le relais. */
+/* ---- Mushaf : 604 pages, texte en flux continu, une ligne = une ligne
+   imprimee du Mushaf. Les polices QCF sont specifiques a chaque page : leur
+   espacement entre mots (kashida) est deja integre aux glyphes, donc les
+   mots sont juste concatenes en ligne, sans justification CSS ajoutee. */
 .mushaf-paper {
-  /* ~3,8 % de la hauteur visible : 15 lignes tiennent pile au zoom 1.
-     ↓ si une page dense défile encore au zoom 1 ; ↑ pour un texte plus grand. */
-  --mushaf-base: 3.8cqh;
+  --mushaf-base: clamp(1.65rem, 7vw, 2.15rem);
   --mushaf-fs: calc(var(--mushaf-scale, 1) * var(--mushaf-base));
 
   display: flex;
   flex-direction: column;
-  width: min(92vw, 440px); /* largeur FIXE : ne bouge pas au zoom */
-  min-height: calc(100cqh - 2px);
+  width: min(94vw, 460px); /* largeur FIXE : ne bouge pas au zoom */
   margin-inline: auto;
-  background: #ffffff;
-  border: 1px solid color-mix(in oklab, var(--color-ink-900) 7%, transparent);
-  border-radius: 24px;
-  box-shadow: var(--shadow-lifted);
 }
-.dark .mushaf-paper {
-  background: var(--color-ink-900);
-  border-color: color-mix(in oklab, #ffffff 8%, transparent);
-}
-/* Pas de cadre : juste une marge intérieure pour le texte. */
+
 .mushaf-frame {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 18px clamp(16px, 6%, 30px);
+  padding-inline: 4px;
 }
-/* Les 15 lignes remplissent la hauteur du cadre. */
+
 .mushaf-lines {
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
 .mushaf-line {
-  flex: 1; /* part égale de la hauteur -> page remplie, interligne régulier */
-  min-height: calc(var(--mushaf-fs) * 1.5);
   display: flex;
   align-items: center;
   direction: rtl;
+  padding-block: 0.3em;
 }
-/* Ligne d'ayah : mots étirés bord à bord (comme l'imprimé). Ne revient à la
-   ligne qu'au zoom, quand le texte ne tient plus sur la largeur fixe. */
+/* Ligne d'ayah : les glyphes se suivent tels quels (comme l'imprimé) — leur
+   espacement mutuel vient de la police, pas d'une justification CSS. */
 .mushaf-line-text {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
+  display: block;
   width: 100%;
-  font-size: var(--mushaf-fs);
-  line-height: 1.35;
-  row-gap: 0.3em;
-}
-.mushaf-line-text > span {
   white-space: nowrap;
+  font-size: var(--mushaf-fs);
+  line-height: 2;
 }
 .mushaf-ayah-line.is-centered .mushaf-line-text {
-  justify-content: center;
-  column-gap: 0.35em;
+  text-align: center;
 }
-/* Extrémités texturées du bandeau de sourate (grille de points fins). */
-.mushaf-banner-fill {
-  background: radial-gradient(circle at center, currentColor 0 1px, transparent 1.7px) 0 0 / 8px 8px;
+
+/* ---- Bandeau de sourate : meme traitement que les pastilles/onglets actifs
+   de l'app (voir MushafIndex) — pas d'ornement invente, la palette de l'app. */
+.mushaf-surah-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 64%;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--color-emerald-900) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-emerald-900) 10%, transparent);
+}
+.dark .mushaf-surah-banner {
+  background: color-mix(in oklab, #ffffff 8%, transparent);
+  border-color: color-mix(in oklab, #ffffff 10%, transparent);
+}
+.mushaf-surah-banner-text {
+  font-family: var(--font-arabic);
+  line-height: 1;
+  color: var(--color-emerald-700);
+  font-size: calc(var(--mushaf-fs) * 0.86);
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dark .mushaf-surah-banner-text {
+  color: var(--color-gold-300);
 }

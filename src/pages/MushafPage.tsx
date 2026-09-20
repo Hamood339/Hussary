@@ -182,7 +182,7 @@ export function MushafPage() {
             </button>
             <button
               onClick={() => setShowIndex(true)}
-              className="text-xs font-medium tabular-nums text-ink-900/55 dark:text-white/50"
+              className="rounded-full bg-emerald-900/8 px-3 py-1 text-xs font-medium tabular-nums text-emerald-700 dark:bg-white/8 dark:text-gold-300"
             >
               {currentPage} / {MUSHAF_TOTAL_PAGES}
             </button>

@@ -63,7 +63,10 @@ export function MushafLineView({ line, pageFontFamily, surahName, activeAyah }: 
             <span
               key={w.key ?? `${w.surah}:${w.ayah}:end:${i}`}
               data-ayah={w.isEnd ? undefined : `${w.surah}:${w.ayah}`}
-              className={active ? 'rounded bg-gold-300/30 dark:bg-gold-300/20' : undefined}
+              className={cn(
+                w.isEnd && 'text-gold-500 dark:text-gold-300/90',
+                active && 'rounded bg-gold-300/30 dark:bg-gold-300/20',
+              )}
             >
               {w.code}
             </span>
